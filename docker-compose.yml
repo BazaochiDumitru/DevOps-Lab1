@@ -1,0 +1,46 @@
+# A docker compose file is starting with indicatting of a version
+version: "3"
+
+# Define a network
+networks:
+  internal:
+
+#In docker when you connect a specific technologies  you use a docker image.
+#Docker images can be found on docker hub webiste https://hub.docker.com/
+# For example, 'nginx' is name of a image from docker website.
+
+# Lower will be the list of our services
+services:
+  nginx:
+    # In this place is connected nginx docker official image https://prnt.sc/Q48-hsG62USe , https://prnt.sc/2iI4iTDSzelv
+    # In case when we will wont to get not the latest version of nginx but a specific one we have to add it to name 'nginx:1.22.0'  https://prnt.sc/wsCnr_tCgJEk
+    image: nginx
+    container_name: nginx_container
+    ports:
+     - "8080:80"
+    # Volumes need to be able to save info after container restart
+    volumes:
+      - ./config/nginx/conf.d:/etc/nginx/conf.d  #This is path where have to get our custom config
+      - ./data/logs:/var/logs/nginx/      #This is path where have to be saved nginx logs
+    depends_on:
+      - mysql
+    networks:
+      - internal
+  mysql:
+    image: mysql:8
+    container_name: mysql_container
+    restart: unless-stopped
+    # NOTE: use of "mysql_native_password" is not recommended: https://dev.mysql.com/doc/refman/8.0/en/upgrading-from-previous-series.html#upgrade-caching-sha2-password
+    # (this is just an example, not intended to be a production configuration)
+    # - command: --default-authentication-plugin=mysql_native_password
+    # MySQL 8.0 supports a new authentication plugin --default-authentication-plugin=caching_sha2_password. This plugin is also the new default value for
+    # command: --default-authentication-plugin=mysql_native_password
+    command: --default-authentication-plugin=caching_sha2_password
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - './docker/volume/mysql:/var/lib/mysql'
+    networks:
+     - internal
